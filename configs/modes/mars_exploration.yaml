@@ -1,0 +1,46 @@
+# PerceptOS operational mode profile.
+# Applied at runtime via Pipeline.apply_mode() — no process restart.
+mode: mars_exploration
+display_name: Mars Exploration
+description: >
+  Perseverance-inspired surface autonomy. Stereo-driven terrain assessment,
+  hazard avoidance and science target triage. Detection runs on a geology
+  model rather than the COCO classes used in the Earth modes.
+
+rover:
+  wheel_radius_m: 0.2625
+  wheelbase_m: 2.7
+  ground_clearance_m: 0.6
+  max_slope_deg: 25.0
+  critical_slope_deg: 30.0
+  max_step_m: 0.35
+  max_roughness_m: 0.15
+  cruise_speed_mps: 0.042      # ~150 m/h, Perseverance-class
+
+# One-way light time makes teleoperation impossible; the rover must decide
+# locally, which is why every value carries its own provenance.
+comms:
+  one_way_light_time_s: [240, 1320]
+  supervision: autonomous
+
+stages:
+  acquisition:      { enabled: true,  params: { cameras: [navcam_left, navcam_right, hazcam_front] } }
+  calibration:      { enabled: true }
+  image_processing: { enabled: true,  params: { clahe_clip: 2.0, denoise: median } }
+  features:         { enabled: true,  params: { detector: AKAZE, max_features: 2000 } }
+  stereo:           { enabled: true,  params: { matcher: SGBM, num_disparities: 128, block_size: 5 } }
+  depth:            { enabled: true }
+  reconstruction:   { enabled: true,  params: { voxel_size_m: 0.05 } }
+  occupancy:        { enabled: true,  params: { cell_size_m: 0.25, extent_m: 30 } }
+  traversability:   { enabled: true,  params: { window_cells: 3 } }
+  detection:        { enabled: true,  params: { model: models/geology_yolo11n.pt, conf: 0.35 } }
+  tracking:         { enabled: false }               # static scene — no moving targets
+  state_estimation: { enabled: true,  params: { process_noise_std: 0.05 } }
+  visual_odometry:  { enabled: true }
+  slip:             { enabled: true,  params: { slip_threshold: 0.30, embedding_threshold: 0.60 } }
+  servoing:         { enabled: true,  params: { gain: 0.3, max_linear: 0.05 } }
+  planner:          { enabled: true,  params: { cost_weight: 6.0, inflation_radius_m: 1.5 } }
+
+science:
+  targets: [outcrop, vein_fill, float_rock, layered_sediment, ventifact]
+  min_confidence: 0.45

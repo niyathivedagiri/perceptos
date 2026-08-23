@@ -1,0 +1,36 @@
+# PerceptOS runtime dependencies — macOS (Apple Silicon) friendly.
+# No CUDA, no TensorRT, no ROS, no Linux-only wheels.
+#
+#   pip install -r requirements.txt        (or: uv sync)
+
+# --- Core geometry & estimation (the only hard requirements) ---------------
+numpy>=1.26,<3.0
+scipy>=1.11
+
+# --- Perception ------------------------------------------------------------
+opencv-contrib-python>=4.9        # contrib needed for SIFT + CSRT/KCF/MOSSE trackers
+open3d>=0.18 ; python_version < "3.13"
+
+# --- Learned detection -----------------------------------------------------
+# CPU/MPS wheels resolve automatically on Apple Silicon. Do NOT pin +cu*.
+torch>=2.2
+torchvision>=0.17
+ultralytics>=8.3                  # YOLOv11
+
+# --- State estimation ------------------------------------------------------
+filterpy>=1.4.5                   # cross-checks perceptos.estimation.kalman
+
+# --- Service layer ---------------------------------------------------------
+fastapi>=0.110
+uvicorn[standard]>=0.29
+pydantic>=2.6
+websockets>=12.0
+python-multipart>=0.0.9
+
+# --- Reporting -------------------------------------------------------------
+reportlab>=4.1
+pandas>=2.2
+
+# --- Health telemetry ------------------------------------------------------
+psutil>=5.9
+PyYAML>=6.0
